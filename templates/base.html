@@ -14,7 +14,7 @@
     
     <!-- <link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto+Mono&display=swap" rel="stylesheet"> -->
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet"> 
-    
+    <link href="{% static 'musicapp/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'musicapp/css/musicplayer.css' %}" rel="stylesheet">
     <style>
         .navbar
@@ -133,11 +133,12 @@
     {% block header %} {% endblock header %}
     
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-md navbar-primary bg-primary">
+    <body id="page-top">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
         <div class="container">
             <h1><a href="{% url 'index' %}" class="navbar-brand">
-            <strong style="color:white">GALVANIC</strong></a></h1>
+            <strong style="color:white">Avalon</strong></a></h1>
             <div class="collapse navbar-collapse">
                 <a href="{% url 'index' %}" class="btn btn-outline-light mt-2 mx-1">HOME</a>
                 <a href="{% url 'all_songs' %}" class="btn btn-outline-light mt-2 mx-1">ALL SONGS</a>
@@ -160,15 +161,24 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbar">
             {% if request.user.is_active %}
             <h5 class="text-white mt-3 mx-2">Hi, {{ request.user.username }}</h5>
-            <a href="{% url 'logout' %}" class="btn btn-light mt-2 mx-2"> Sign Out <i class="fa fa-sign-out" aria-hidden="true"></i></a>
+            <a href="{% url 'logout' %}" class="item-logout"> Sign Out <i class="fa fa-sign-out" aria-hidden="true"></i></a>
+            <a class="item-profile" href="{% url 'profile' %}" role="button">profile</a>
+            <a class="item-upload" href="{% url 'upload' %}" role="button">Upload</a>
             {% else %}
-            <a href="{% url 'login' %}" class="btn btn-light mt-2 mx-2"><i class="fa fa-sign-in" aria-hidden="true"></i> Sign In</a>
-            <a href="{% url 'signup' %}" class="btn btn-light mt-2 mx-2"><i class="fa fa-user-plus" aria-hidden="true"></i> Sign Up</a>
+            <a href="{% url 'login' %}" class="item-login"><i class="fa fa-sign-in" aria-hidden="true"></i> Sign In</a>
+            <a href="{% url 'signup' %}" class="item-singup"><i class="fa fa-user-plus" aria-hidden="true"></i> Sign Up</a>
             {% endif %}            
             </div>
         </div>
 
     </nav>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
 
     {% block body %}
     {% endblock body %}

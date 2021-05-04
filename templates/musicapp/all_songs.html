@@ -13,11 +13,11 @@
             <input type="text" class="form-control input-lg" style="border-radius: 5px;"
             name="q" value="{{ request.GET.q }}" placeholder= "Search Songs "/>
 
-            <select name="languages" class="custom-select mx-1" style="border-radius: 5px;">
-              <option selected="selected" disabled>Languages</option>
-              {% if all_languages %}
-                  {% for language in all_languages %}
-                      <option value={{language}}>{{language}}</option>
+            <select name="SongType" class="custom-select mx-1" style="border-radius: 5px;">
+              <option selected="selected" disabled>SongType</option>
+              {% if all_SongType %}
+                  {% for SongType in all_SongType %}
+                      <option value={{SongType}}>{{SongType}}</option>
                   {% endfor %}
               {% endif %}
             </select>
@@ -97,4 +97,4 @@
 </footer>
 
 
-{% endblock body %}
+{% endblock %}

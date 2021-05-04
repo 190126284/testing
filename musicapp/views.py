@@ -3,7 +3,67 @@ from .models import *
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.generic import CreateView, DetailView, DeleteView, ListView
+from django.utils.decorators import method_decorator
+from django.urls import reverse, reverse_lazy
+from .forms import *
+    
+AUDIO_FILE_TYPES = ['wav', 'mp3', 'ogg']
+IMAGE_FILE_TYPES = ['png', 'jpg', 'jpeg']
 
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Your account has been created! You are now able to log in')
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'authentication/signup.html', {'form': form})
+    
+    
+    
+@login_required()
+def profile(request):
+    Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST,
+                                   request.FILES,
+                                   instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, f'Your account has been updated!')
+            return redirect('profile')
+
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
+
+    return render(request, 'users/profile.html', context)
+
+def SongUploadView(request):
+    if request.method == 'POST':
+        sform = SongUploadForm(request.POST)
+        if sform.is_valid():
+            sform.save()
+            messages.success(request, f'Your song is uploaded!')
+            return redirect('index')
+    else:
+        sform = SongUploadForm()
+    return render(request, 'musicapp/upload.html', {'sform': sform})
+
+
+def index1(request):
+    return render(request, 'musicapp/new_index.html')
 
 # Create your views here.
 def index(request):
@@ -43,15 +103,40 @@ def index(request):
     sliced_ids = [each['id'] for each in songs_all][:5]
     indexpage_songs = Song.objects.filter(id__in=sliced_ids)
 
-    # Display Hindi Songs
-    songs_hindi = list(Song.objects.filter(language='Hindi').values('id'))
-    sliced_ids = [each['id'] for each in songs_hindi][:5]
-    indexpage_hindi_songs = Song.objects.filter(id__in=sliced_ids)
+    # Display Soul Songs
+    Type_Soul = list(Song.objects.filter(SongType='R&B/Soul').values('id'))
+    sliced_ids = [each['id'] for each in Type_Soul][:5]
+    indexpage_Soul_songs = Song.objects.filter(id__in=sliced_ids)
 
-    # Display English Songs
-    songs_english = list(Song.objects.filter(language='English').values('id'))
-    sliced_ids = [each['id'] for each in songs_english][:5]
-    indexpage_english_songs = Song.objects.filter(id__in=sliced_ids)
+    # Display Rock Songs
+    Type_Rock = list(Song.objects.filter(SongType='Rock').values('id'))
+    sliced_ids = [each['id'] for each in Type_Rock][:5]
+    indexpage_Rock_songs = Song.objects.filter(id__in=sliced_ids)
+    
+    # Display Emo Songs
+    Type_Emo = list(Song.objects.filter(SongType='Emo').values('id'))
+    sliced_ids = [each['id'] for each in Type_Emo][:5]
+    indexpage_Emo_songs = Song.objects.filter(id__in=sliced_ids)
+    
+    # Display Jazz Songs
+    Type_Jazz = list(Song.objects.filter(SongType='Jazz').values('id'))
+    sliced_ids = [each['id'] for each in Type_Jazz][:5]
+    indexpage_Jazz_songs = Song.objects.filter(id__in=sliced_ids)
+    
+    # Display BoomBap Songs
+    Type_BoomBap = list(Song.objects.filter(SongType='BoomBap').values('id'))
+    sliced_ids = [each['id'] for each in Type_BoomBap][:5]
+    indexpage_BoomBap_songs = Song.objects.filter(id__in=sliced_ids)
+    
+    # Display Trap Songs
+    Type_Trap = list(Song.objects.filter(SongType='Trap').values('id'))
+    sliced_ids = [each['id'] for each in Type_Trap][:5]
+    indexpage_Trap_songs = Song.objects.filter(id__in=sliced_ids)
+    
+    # Display Auto-Tunes Songs
+    Type_Autotunes = list(Song.objects.filter(SongType='Autotunes').values('id'))
+    sliced_ids = [each['id'] for each in Type_Autotunes][:5]
+    indexpage_Autotunes_songs = Song.objects.filter(id__in=sliced_ids)
 
     if len(request.GET) > 0:
         search_query = request.GET.get('q')
@@ -62,8 +147,9 @@ def index(request):
     context = {
         'all_songs':indexpage_songs,
         'recent_songs': recent_songs,
-        'hindi_songs':indexpage_hindi_songs,
-        'english_songs':indexpage_english_songs,
+        'Soul_songs':indexpage_Soul_songs,
+        'Rock_songs':indexpage_Rock_songs,
+        'Emo_songs':indexpage_Emo_songs,
         'last_played':last_played_song,
         'first_time': first_time,
         'query_search':False,
@@ -71,32 +157,9 @@ def index(request):
     return render(request, 'musicapp/index.html', context=context)
 
 
-def hindi_songs(request):
+def Soul_songs(request):
 
-    hindi_songs = Song.objects.filter(language='Hindi')
-
-    #Last played song
-    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
-    if last_played_list:
-        last_played_id = last_played_list[0]['song_id']
-        last_played_song = Song.objects.get(id=last_played_id)
-    else:
-        last_played_song = Song.objects.get(id=7)
-
-    query = request.GET.get('q')
-
-    if query:
-        hindi_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
-        context = {'hindi_songs': hindi_songs}
-        return render(request, 'musicapp/hindi_songs.html', context)
-
-    context = {'hindi_songs':hindi_songs,'last_played':last_played_song}
-    return render(request, 'musicapp/hindi_songs.html',context=context)
-
-
-def english_songs(request):
-
-    english_songs = Song.objects.filter(language='English')
+    Soul_songs = Song.objects.filter(SongType='R&B/Soul')
 
     #Last played song
     last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
@@ -109,12 +172,144 @@ def english_songs(request):
     query = request.GET.get('q')
 
     if query:
-        english_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
-        context = {'english_songs': english_songs}
-        return render(request, 'musicapp/english_songs.html', context)
+        Soul_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Soul_songs': Soul_songs}
+        return render(request, 'musicapp/Soul_songs.html', context)
 
-    context = {'english_songs':english_songs,'last_played':last_played_song}
-    return render(request, 'musicapp/english_songs.html',context=context)
+    context = {'Soul_songs':Soul_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Soul_songs.html',context=context)
+
+def Emo_songs(request):
+
+    Emo_songs = Song.objects.filter(SongType='Emo')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Soul_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Emo_songs': Emo_songs}
+        return render(request, 'musicapp/Emo_songs.html', context)
+
+    context = {'Emo_songs':Emo_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Emo_songs.html',context=context)
+
+def Jazz_songs(request):
+
+    Jazz_songs = Song.objects.filter(SongType='Jazz')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Jazz_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Jazz_songs': Jazz_songs}
+        return render(request, 'musicapp/Jazz_songs.html', context)
+
+    context = {'Jazz_songs':Jazz_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Jazz_songs.html',context=context)
+    
+def Trap_songs(request):
+
+    Trap_songs = Song.objects.filter(SongType='Trap')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Trap_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Trap_songs': Trap_songs}
+        return render(request, 'musicapp/Trap_songs.html', context)
+
+    context = {'Trap_songs':Trap_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Trap_songs.html',context=context)
+    
+def BoomBap_songs(request):
+
+    BoomBap_songs = Song.objects.filter(SongType='BoomBap')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Jazz_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'BoomBap_songs': Jazz_songs}
+        return render(request, 'musicapp/BoomBap_songs.html', context)
+
+    context = {'BoomBap_songs':BoomBap_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/BoomBap_songs.html',context=context)
+
+def Rock_songs(request):
+
+    Rock_songs = Song.objects.filter(SongType='Rock')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Rock_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Rock_songs': Rock_songs}
+        return render(request, 'musicapp/Rock_songs.html', context)
+
+    context = {'Rock_songs':Rock_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Rock_songs.html',context=context)
+    
+def Autotunes_songs(request):
+
+    Autotunes_songs = Song.objects.filter(SongType='Autotunes')
+
+    #Last played song
+    last_played_list = list(Recent.objects.values('song_id').order_by('-id'))
+    if last_played_list:
+        last_played_id = last_played_list[0]['song_id']
+        last_played_song = Song.objects.get(id=last_played_id)
+    else:
+        last_played_song = Song.objects.get(id=7)
+
+    query = request.GET.get('q')
+
+    if query:
+        Autotunes_songs = Song.objects.filter(Q(name__icontains=query)).distinct()
+        context = {'Autotunes_songs': Autotunes_songs}
+        return render(request, 'musicapp/Autotunes_songs.html', context)
+
+    context = {'Autotunes_songs':Autotunes_songs,'last_played':last_played_song}
+    return render(request, 'musicapp/Autotunes_songs.html',context=context)
 
 @login_required(login_url='login')
 def play_song(request, song_id):
@@ -170,19 +365,19 @@ def all_songs(request):
     qs_singers = Song.objects.values_list('singer').all()
     s_list = [s.split(',') for singer in qs_singers for s in singer]
     all_singers = sorted(list(set([s.strip() for singer in s_list for s in singer])))
-    qs_languages = Song.objects.values_list('language').all()
-    all_languages = sorted(list(set([l.strip() for lang in qs_languages for l in lang])))
+    qs_SongType = Song.objects.values_list('SongType').all()
+    all_SongType = sorted(list(set([l.strip() for lang in qs_SongType for l in lang])))
     
     if len(request.GET) > 0:
         search_query = request.GET.get('q')
         search_singer = request.GET.get('singers') or ''
-        search_language = request.GET.get('languages') or ''
-        filtered_songs = songs.filter(Q(name__icontains=search_query)).filter(Q(language__icontains=search_language)).filter(Q(singer__icontains=search_singer)).distinct()
+        search_SongType = request.GET.get('SongType') or ''
+        filtered_songs = songs.filter(Q(name__icontains=search_query)).filter(Q(SongType__icontains=search_SongType)).filter(Q(singer__icontains=search_singer)).distinct()
         context = {
         'songs': filtered_songs,
         'last_played':last_played_song,
         'all_singers': all_singers,
-        'all_languages': all_languages,
+        'all_SongType': all_SongType,
         'query_search': True,
         }
         return render(request, 'musicapp/all_songs.html', context)
@@ -192,7 +387,7 @@ def all_songs(request):
         'last_played':last_played_song,
         'first_time':first_time,
         'all_singers': all_singers,
-        'all_languages': all_languages,
+        'all_SongType': all_SongType,
         'query_search' : False,
         }
     return render(request, 'musicapp/all_songs.html', context=context)
@@ -314,3 +509,5 @@ def favourite(request):
         messages.success(request, "Removed from favourite!")
     context = {'songs': songs}
     return render(request, 'musicapp/favourite.html', context=context)
+    
+    

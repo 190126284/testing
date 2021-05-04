@@ -26,7 +26,7 @@ SECRET_KEY = 'rbh8%u_$en!zodi6j_ual3azei=2(@yd1zrl7n0kz^t!xe$t2o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['18.204.7.153']
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 # Application definition
@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'public_chat',
+    'channels',
     
     # allauth apps
     'django.contrib.sites',
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
     # apps
     'authentication.apps.AuthenticationConfig',
     'musicapp.apps.MusicappConfig',
+    'personal.apps.PersonalConfig',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +87,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'musicplayer.wsgi.application'
 
+ASGI_APPLICATION = 'musicplayer.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('18.204.7.153', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -165,10 +178,10 @@ SITE_ID = 1
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-# LOGIN_URL = 'login'
-# LOGOUT_URL = 'logout'
-LOGIN_REDIRECT_URL = 'index'
-# LOGOUT_REDIRECT_URL = 'index'
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+LOGIN_REDIRECT_URL = 'profile'
+LOGOUT_REDIRECT_URL = 'index'
 
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_PROVIDERS = {
