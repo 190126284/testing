@@ -2,6 +2,7 @@ from django.urls import path
 from django.conf.urls import include, url
 from . import views
 from musicapp.views import *
+from personal.views import *
 
 # Add URLConf
 urlpatterns = [
@@ -28,5 +29,6 @@ urlpatterns = [
         url(r'^upload', SongUploadView, name='upload'),
     ])),
     path('profile/', profile, name='profile'),
+    path('chatroom/', home_screen_view, name='home_screen_view'),
 
 ]
